@@ -1,0 +1,24 @@
+.qubitFlow {
+  flex-direction: column;
+  display: flex;
+  height: 100%;
+  /* TODO: there's gotta be a better way to make room for the header */
+  margin-top: 50px;
+}
+
+.qubitFlow aside {
+  border-right: 1px solid;
+  padding: 15px 10px;
+}
+
+.qubitFlow aside > * {
+  margin-bottom: 10px;
+  cursor: grab;
+}
+
+.qubitFlow .qubitReactFlowWrapper {
+  flex-grow: 1;
+  /* TODO: find a dynamic way to set height/width */
+  height: 800px;
+  width: 800px;
+}
