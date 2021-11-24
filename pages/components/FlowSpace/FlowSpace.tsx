@@ -9,7 +9,16 @@ import ReactFlow, {
   OnLoadParams,
   Node,
   ElementId,
+  useStoreState,
+  ReactFlowState,
 } from "react-flow-renderer";
+import {
+  Header,
+  HeaderGlobalAction,
+  HeaderGlobalBar,
+  HeaderName,
+} from "carbon-components-react";
+import { QOperation20 } from "@carbon/icons-react";
 import { QubitSidebar } from "../QubitSidebar/QubitSidebar";
 import styles from "./FlowSpace.module.scss";
 
@@ -61,6 +70,11 @@ export const FlowSpace = () => {
     event.dataTransfer.dropEffect = "move";
   };
 
+  const typeMap = (type: string) => {
+    if (type === "gnd") return "output";
+    return "default";
+  };
+
   const onDrop = (event: DragEvent) => {
     event.preventDefault();
 
@@ -72,29 +86,60 @@ export const FlowSpace = () => {
       });
       const newNode: Node = {
         id: getId(),
-        type,
+        type: typeMap(type),
         position,
-        data: { label: `${type} node` },
+        data: { label: `${type}` },
       };
       setElements((es) => es.concat(newNode));
     }
   };
 
+  /* TODO: on clicking header button, put the arrays together and send them
+     to server */
+  /**
+   * format expected by function: object containing:
+   * label
+   * type
+   * terminals
+   * value
+   * connections
+   */
+  const FormatGraph = () => {
+    const nodes = useStoreState((state: ReactFlowState) => state.nodes);
+    const edges = useStoreState((state: ReactFlowState) => state.edges);
+    const combinedGraph: Array<Node<any> | Edge<any>> = [...nodes, ...edges];
+    console.log(combinedGraph);
+    return null;
+  };
+
   return (
-    <div className={styles.qubitFlow}>
+    <>
       <ReactFlowProvider>
-        <QubitSidebar />
-        <div className={styles.qubitReactFlowWrapper}>
-          <ReactFlow
-            elements={elements}
-            onConnect={onConnect}
-            onElementsRemove={onElementsRemove}
-            onLoad={onLoad}
-            onDragOver={onDragOver}
-            onDrop={onDrop}
-          />
+        <Header aria-label="Quantum Spice">
+          <HeaderName href="#" prefix="Quantum">
+            Spice
+          </HeaderName>
+          <HeaderGlobalBar>
+            <HeaderGlobalAction aria-label="Simulate" tooltipAlignment="end">
+              <QOperation20 />
+            </HeaderGlobalAction>
+          </HeaderGlobalBar>
+        </Header>
+        <div className={styles.qubitFlow}>
+          <QubitSidebar />
+          <div className={styles.qubitReactFlowWrapper}>
+            <FormatGraph />
+            <ReactFlow
+              elements={elements}
+              onConnect={onConnect}
+              onElementsRemove={onElementsRemove}
+              onLoad={onLoad}
+              onDragOver={onDragOver}
+              onDrop={onDrop}
+            ></ReactFlow>
+          </div>
         </div>
       </ReactFlowProvider>
-    </div>
+    </>
   );
 };
