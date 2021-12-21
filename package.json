@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@carbon/icons-react": "^10.43.0",
     "carbon-components": "^10.45.0",
     "carbon-components-react": "^7.45.0",
     "carbon-icons": "^7.0.7",
@@ -19,6 +20,7 @@
     "sass": "^1.42.0"
   },
   "devDependencies": {
+    "@types/carbon__icons-react": "^10.31.2",
     "@types/carbon-components-react": "^7.44.0",
     "@types/react": "17.0.21",
     "eslint": "7.32.0",

@@ -1,4 +1,4 @@
-import { useState, useRef, DragEvent } from "react";
+import { useState, DragEvent } from "react";
 import ReactFlow, {
   ReactFlowProvider,
   addEdge,
@@ -20,42 +20,90 @@ import {
 } from "carbon-components-react";
 import { QOperation20 } from "@carbon/icons-react";
 import { QubitSidebar } from "../QubitSidebar/QubitSidebar";
+import {
+  GroundNode,
+  CapacitorNode,
+  InductorNode,
+} from "../QubitDraggable/QubitDraggable";
+import { QubitContext } from "../../context/qubitContext";
 import styles from "./FlowSpace.module.scss";
 
-// from ReactFlow examples
-const initialElements = [
-  {
-    id: "1",
-    type: "input", // input node
-    data: { label: "Input Node" },
-    position: { x: 250, y: 25 },
-  },
-  // default node
-  {
-    id: "2",
-    // you can also pass a React component as a label
-    data: { label: <div>Default Node</div> },
-    position: { x: 100, y: 125 },
-  },
-  {
-    id: "3",
-    type: "output", // output node
-    data: { label: "Output Node" },
-    position: { x: 250, y: 250 },
-  },
-  // animated edge
-  { id: "e1-2", source: "1", target: "2", animated: true },
-  { id: "e2-3", source: "2", target: "3" },
-];
-
+// TODO: not great way of generating ids
+let capId = 0;
+let indId = 0;
+let gndId = 0;
 let id = 0;
-const getId = (): ElementId => `qubitnode_${id++}`;
+const getId = (nodeType): ElementId => {
+  switch (nodeType) {
+    case "capacitor":
+      return `capacitor_${capId++}`;
+    case "inductor":
+      return `inductor_${indId++}`;
+    case "ground":
+      return `ground_${gndId++}`;
+    default:
+      return `qubitComp_${id++}`;
+  }
+};
+const customNodeTypes = {
+  ground: GroundNode,
+  inductor: InductorNode,
+  capacitor: CapacitorNode,
+};
 
-// From example https://github.com/wbkd/react-flow/blob/main/example/src/DragNDrop/index.tsx
 export const FlowSpace = () => {
-  // const flowWrapper = useRef(null);
   const [reactFlowInstance, setReactFlowInstance] = useState<OnLoadParams>();
   const [elements, setElements] = useState<Elements>([]);
+
+  // Context origin
+  const [components, setComponents] = useState({});
+
+  /**
+   * Internal func:
+   * -add node to ReactFlow space
+   * -pass it the "createValue" function
+   * -add node to QubitContext
+   */
+  const createNode = (nodeInfo) => {
+    const nodeTerminals =
+      nodeInfo.type === "ground"
+        ? ["gnd"]
+        : [`${nodeInfo.id}_1`, `${nodeInfo.id}_2`];
+    // const nodeValue =
+    //   nodeInfo.type === "inductor"
+    //     ? nodeInfo.data.value.inductance
+    //     : nodeInfo.data.value.capacitance;
+    const newNode = {
+      label: nodeInfo.data.label,
+      type: nodeInfo.type,
+      terminals: nodeTerminals,
+      value: nodeInfo.data.value,
+      connections: {},
+    };
+    setComponents((components) => ({ ...components, [nodeInfo.id]: newNode }));
+  };
+
+  /**
+   * Internal func:
+   * -when connecting nodes, look up id (is there a better way?)
+   * -add connections to id's connections obj
+   */
+  const connectNode = (sourceNode, targetNode) => {};
+
+  /**
+   *
+   *
+   */
+  const updateValue = (nodeId, newValue) => {
+    // TODO: components is being saved as "at time" object
+    // this should be a callback ?
+    console.log(nodeId);
+    console.log(components);
+    const targetNode = components.nodeId;
+    console.log(targetNode);
+    const updatedNode = { ...targetNode, value: newValue };
+    setComponents((components) => ({ ...components, [nodeId]: updatedNode }));
+  };
 
   const onConnect = (params: Connection | Edge) =>
     setElements((els) => addEdge(params, els));
@@ -70,32 +118,37 @@ export const FlowSpace = () => {
     event.dataTransfer.dropEffect = "move";
   };
 
-  const typeMap = (type: string) => {
-    if (type === "gnd") return "output";
-    return "default";
-  };
-
   const onDrop = (event: DragEvent) => {
     event.preventDefault();
 
     if (reactFlowInstance) {
       const type = event.dataTransfer.getData("application/reactflow");
+      console.log(type);
       const position = reactFlowInstance.project({
         x: event.clientX,
         y: event.clientY - 40,
       });
+
+      console.log(event.dataTransfer.dropEffect);
+      console.log(event.dataTransfer.effectAllowed);
+      const newNodeId = getId(type);
       const newNode: Node = {
-        id: getId(),
-        type: typeMap(type),
+        id: newNodeId,
+        type: type,
         position,
-        data: { label: `${type}` },
+        data: {
+          nodeId: newNodeId,
+          label: `${type}`,
+          value: { capacitance: 0, inductance: 0 },
+          onChange: updateValue,
+        },
       };
       setElements((es) => es.concat(newNode));
+      createNode(newNode);
     }
   };
 
-  /* TODO: on clicking header button, put the arrays together and send them
-     to server */
+  // TODO: qubit data state needs to be managed separately from reactflow
   /**
    * format expected by function: object containing:
    * label
@@ -115,30 +168,45 @@ export const FlowSpace = () => {
   return (
     <>
       <ReactFlowProvider>
-        <Header aria-label="Quantum Spice">
-          <HeaderName href="#" prefix="Quantum">
-            Spice
-          </HeaderName>
-          <HeaderGlobalBar>
-            <HeaderGlobalAction aria-label="Simulate" tooltipAlignment="end">
-              <QOperation20 />
-            </HeaderGlobalAction>
-          </HeaderGlobalBar>
-        </Header>
-        <div className={styles.qubitFlow}>
-          <QubitSidebar />
-          <div className={styles.qubitReactFlowWrapper}>
-            <FormatGraph />
-            <ReactFlow
-              elements={elements}
-              onConnect={onConnect}
-              onElementsRemove={onElementsRemove}
-              onLoad={onLoad}
-              onDragOver={onDragOver}
-              onDrop={onDrop}
-            ></ReactFlow>
+        <QubitContext.Provider
+          value={{
+            components,
+            addComponent: createNode,
+            updateComponent: connectNode,
+          }}
+        >
+          <Header aria-label="Quantum Spice">
+            <HeaderName href="#" prefix="Quantum">
+              Spice
+            </HeaderName>
+            <HeaderGlobalBar>
+              <HeaderGlobalAction
+                aria-label="Simulate"
+                tooltipAlignment="end"
+                onClick={() => {
+                  console.log(components);
+                }}
+              >
+                <QOperation20 />
+              </HeaderGlobalAction>
+            </HeaderGlobalBar>
+          </Header>
+          <div className={styles.qubitFlow}>
+            <QubitSidebar />
+            <div className={styles.qubitReactFlowWrapper}>
+              {/* <FormatGraph /> */}
+              <ReactFlow
+                elements={elements}
+                onConnect={onConnect}
+                onElementsRemove={onElementsRemove}
+                onLoad={onLoad}
+                onDragOver={onDragOver}
+                onDrop={onDrop}
+                nodeTypes={customNodeTypes}
+              />
+            </div>
           </div>
-        </div>
+        </QubitContext.Provider>
       </ReactFlowProvider>
     </>
   );
