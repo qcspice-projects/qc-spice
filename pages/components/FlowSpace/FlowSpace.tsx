@@ -11,6 +11,7 @@ import ReactFlow, {
   ElementId,
   useStoreState,
   ReactFlowState,
+  Background,
 } from "react-flow-renderer";
 import {
   Header,
@@ -28,12 +29,14 @@ import {
 import { QubitContext } from "../../context/qubitContext";
 import styles from "./FlowSpace.module.scss";
 
+// TODO IMPORTANT: this file is so big...needs to be split
+
 // TODO: not great way of generating ids
 let capId = 0;
 let indId = 0;
 let gndId = 0;
 let id = 0;
-const getId = (nodeType): ElementId => {
+const getId = (nodeType: String): ElementId => {
   switch (nodeType) {
     case "capacitor":
       return `capacitor_${capId++}`;
@@ -157,13 +160,18 @@ export const FlowSpace = () => {
    * value
    * connections
    */
-  const FormatGraph = () => {
-    const nodes = useStoreState((state: ReactFlowState) => state.nodes);
-    const edges = useStoreState((state: ReactFlowState) => state.edges);
-    const combinedGraph: Array<Node<any> | Edge<any>> = [...nodes, ...edges];
-    console.log(combinedGraph);
-    return null;
-  };
+  // const FormatGraph = () => {
+  //   const nodes = useStoreState((state: ReactFlowState) => state.nodes);
+  //   const edges = useStoreState((state: ReactFlowState) => state.edges);
+  //   const combinedGraph: Array<Node<any> | Edge<any>> = [...nodes, ...edges];
+  //   console.log(combinedGraph);
+  //   return null;
+  // };
+
+  /**
+   * Translate state structure to graph for Metal
+   */
+  const formatGraph = () => {};
 
   return (
     <>
@@ -203,7 +211,9 @@ export const FlowSpace = () => {
                 onDragOver={onDragOver}
                 onDrop={onDrop}
                 nodeTypes={customNodeTypes}
-              />
+              >
+                <Background variant="dots" gap={20} size={1} color="#aaa" />
+              </ReactFlow>
             </div>
           </div>
         </QubitContext.Provider>
