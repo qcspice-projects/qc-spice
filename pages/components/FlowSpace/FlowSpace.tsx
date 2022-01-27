@@ -12,6 +12,7 @@ import ReactFlow, {
   useStoreState,
   ReactFlowState,
   Background,
+  BackgroundVariant,
 } from "react-flow-renderer";
 import {
   Header,
@@ -61,6 +62,8 @@ export const FlowSpace = () => {
   // Context origin
   const [components, setComponents] = useState({});
 
+  // UseEffects keep ReactFlow state in sync with data state (?)
+
   /**
    * Internal func:
    * -add node to ReactFlow space
@@ -72,10 +75,6 @@ export const FlowSpace = () => {
       nodeInfo.type === "ground"
         ? ["gnd"]
         : [`${nodeInfo.id}_1`, `${nodeInfo.id}_2`];
-    // const nodeValue =
-    //   nodeInfo.type === "inductor"
-    //     ? nodeInfo.data.value.inductance
-    //     : nodeInfo.data.value.capacitance;
     const newNode = {
       label: nodeInfo.data.label,
       type: nodeInfo.type,
@@ -160,13 +159,6 @@ export const FlowSpace = () => {
    * value
    * connections
    */
-  // const FormatGraph = () => {
-  //   const nodes = useStoreState((state: ReactFlowState) => state.nodes);
-  //   const edges = useStoreState((state: ReactFlowState) => state.edges);
-  //   const combinedGraph: Array<Node<any> | Edge<any>> = [...nodes, ...edges];
-  //   console.log(combinedGraph);
-  //   return null;
-  // };
 
   /**
    * Translate state structure to graph for Metal
@@ -212,7 +204,7 @@ export const FlowSpace = () => {
                 onDrop={onDrop}
                 nodeTypes={customNodeTypes}
               >
-                <Background variant="dots" gap={20} size={1} color="#aaa" />
+                <Background variant={BackgroundVariant.Dots} gap={20} size={1} color="#aaa" />
               </ReactFlow>
             </div>
           </div>
