@@ -1,4 +1,4 @@
-import { useState, DragEvent } from "react";
+import { useState, DragEvent, MouseEvent, KeyboardEvent, ChangeEvent, useEffect } from "react";
 import ReactFlow, {
   ReactFlowProvider,
   addEdge,
@@ -13,6 +13,7 @@ import ReactFlow, {
   ReactFlowState,
   Background,
   BackgroundVariant,
+  FlowElement,
 } from "react-flow-renderer";
 import {
   Header,
@@ -29,6 +30,12 @@ import {
 } from "../QubitDraggable/QubitDraggable";
 import { QubitContext } from "../../context/qubitContext";
 import styles from "./FlowSpace.module.scss";
+
+// Type
+interface ComponentValue {
+  capacitance: number | string;
+  inductance: number | string;
+}
 
 // TODO IMPORTANT: this file is so big...needs to be split
 
@@ -58,11 +65,17 @@ const customNodeTypes = {
 export const FlowSpace = () => {
   const [reactFlowInstance, setReactFlowInstance] = useState<OnLoadParams>();
   const [elements, setElements] = useState<Elements>([]);
+  const [activeElement, setActiveElement] = useState<any>();
+  const [activeElementValue, setActiveElementValue] = useState<ComponentValue>();
 
   // Context origin
   const [components, setComponents] = useState({});
 
   // UseEffects keep ReactFlow state in sync with data state (?)
+  useEffect(() => {
+    console.log(activeElementValue);
+
+  }, [activeElementValue, setElements])
 
   /**
    * Internal func:
@@ -85,6 +98,35 @@ export const FlowSpace = () => {
     setComponents((components) => ({ ...components, [nodeInfo.id]: newNode }));
   };
 
+  const onElementClick = (event: MouseEvent, element: FlowElement) => {
+    console.log(event);
+    console.log(element);
+    if (element.type !== "step") {
+      setActiveElement(element);
+      setActiveElementValue(element.data.value);
+    }
+  }
+
+  // reference: https://codesandbox.io/s/rqf2q?file=/src/Flow.js
+  const onInputChange = (e: ChangeEvent<HTMLInputElement>) => {
+    console.log(e.target.id);
+    console.log(activeElementValue);
+    if (e.target.id === "inductance") setActiveElementValue({...activeElementValue, inductance: e.target.value});
+    if (e.target.id === "capacitance") setActiveElementValue({...activeElementValue, capacitance: e.target.value});
+    // console.log(activeElement);
+    // console.log(e);
+    // setActiveElement((prevActiveEl) => ({...prevActiveEl, data: {...prevActiveEl.data, value: e.target.value}}));
+    // console.log(activeElement);
+    // const updatedElement = elements.map((el) => {
+    //   if (el.id === activeElement.id) {
+    //     return {...el, data: {...el.data, value: e.target.value}};
+    //   }
+    //   return el;
+    // });
+
+    // setElements(updatedElement);
+  }
+
   /**
    * Internal func:
    * -when connecting nodes, look up id (is there a better way?)
@@ -95,20 +137,20 @@ export const FlowSpace = () => {
   /**
    *
    *
-   */
-  const updateValue = (nodeId, newValue) => {
-    // TODO: components is being saved as "at time" object
-    // this should be a callback ?
-    console.log(nodeId);
-    console.log(components);
-    const targetNode = components.nodeId;
-    console.log(targetNode);
-    const updatedNode = { ...targetNode, value: newValue };
-    setComponents((components) => ({ ...components, [nodeId]: updatedNode }));
-  };
+  // //  */
+  // const updateValue = (nodeId, newValue) => {
+  //   // TODO: components is being saved as "at time" object
+  //   // this should be a callback ?
+  //   console.log(nodeId);
+  //   console.log(components);
+  //   const targetNode = components.nodeId;
+  //   console.log(targetNode);
+  //   const updatedNode = { ...targetNode, value: newValue };
+  //   setComponents((components) => ({ ...components, [nodeId]: updatedNode }));
+  // };
 
   const onConnect = (params: Connection | Edge) =>
-    setElements((els) => addEdge(params, els));
+    setElements((els) => addEdge({...params, type: "step"}, els));
   const onElementsRemove = (elementsToRemove: Elements) =>
     setElements((els) => removeElements(elementsToRemove, els));
 
@@ -142,7 +184,7 @@ export const FlowSpace = () => {
           nodeId: newNodeId,
           label: `${type}`,
           value: { capacitance: 0, inductance: 0 },
-          onChange: updateValue,
+          onChange: onInputChange,
         },
       };
       setElements((es) => es.concat(newNode));
@@ -199,6 +241,7 @@ export const FlowSpace = () => {
                 elements={elements}
                 onConnect={onConnect}
                 onElementsRemove={onElementsRemove}
+                onElementClick={onElementClick}
                 onLoad={onLoad}
                 onDragOver={onDragOver}
                 onDrop={onDrop}

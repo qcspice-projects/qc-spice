@@ -24,6 +24,15 @@ export const GroundNode = ({ data }) => {
 };
 
 export const InductorNode = ({ data }) => {
+  const iconRef = forwardRef((_props, _ref) => (
+    <Image
+      src="/inductor.svg"
+      alt="Inductor"
+      height="50px"
+      width="100px"
+    />
+  ));
+  iconRef.displayName = "iconRef";
   return (
     <>
       <div className={styles.qubitDraggable}>
@@ -31,24 +40,13 @@ export const InductorNode = ({ data }) => {
         <Tooltip
           showIcon={true}
           direction="right"
-          renderIcon={forwardRef((props, ref) => (
-            <Image
-              src="/inductor.svg"
-              alt="Inductor"
-              height="50px"
-              width="100px"
-            />
-          ))}
+          focusTrap={true}
+          renderIcon={iconRef}
         >
           <TextInput
             id="inductance"
             labelText="Inductance"
-            onChange={(e) =>
-              data.onChange(data.nodeId, {
-                inductance: e.target.value,
-                capacitance: null,
-              })
-            }
+            onChange={data.onChange}
             value={data.value.inductance}
           />
         </Tooltip>
@@ -75,7 +73,7 @@ export const CapacitorNode = ({ data }) => {
   );
 };
 
-// TODO: this is the thing that'll be on the sidebar
+// TODO: use images
 export const QubitComponentDrag = (props: QubitProps) => {
   return (
     <>
