@@ -1,10 +1,10 @@
-//Quantum SPICE
+//Quantum SPICE 
 //Converts circuit information to capacitance & inductance graph
 
 var circCompList = []
 
 //arbitrary class for each components in the quantum circuit
-export class circComp {
+class circComp {
 
     name = "a";
     type = "a";
@@ -21,9 +21,9 @@ export class circComp {
         this.terminals = terminals;
         // value (string) => e.g. 4F, 15H
         this.value = value;
-        // connection (dictionary w string key and string list value)
+        // connection (dictionary w string key and string list value) 
         // e.g. {C1_1: [C2_1, I1_2], C1_2: []}
-        // stores list of connections between
+        // stores list of connections between 
         // this.terminals (key) & other terminals (values)
         // no connection is shown by []
         this.connections = connections;
@@ -32,7 +32,7 @@ export class circComp {
     }
 
 
-    // convert connection dict to only store connection with terminals
+    // convert connection dict to only store connection with terminals 
     // that are from same type of comps as this
     // e.g. connection between capacitors / connection between inductors
     get getSameTypeConnections() {
@@ -49,7 +49,7 @@ export class circComp {
                 if (connected_comp.type == this.type) {
                     result[terminal].push(connected_t)
                 }
-                // if not, call findSameTypeTerminal() to find
+                // if not, call findSameTypeTerminal() to find 
                 // connected terminals of same type
                 else {
                     // sameTypeT -> list of terminals that are connected
@@ -58,7 +58,7 @@ export class circComp {
                 }
             }
         }
-
+                
         return result
     }
 }
@@ -84,7 +84,7 @@ function getCompFromTerminal(terminal) {
     throw "terminal doesn't exist, perhaps you have a wrong test case?";
 }
 
-// return the value of the comp that
+// return the value of the comp that 
 // the terminal is in
 function getValFromTerminal(terminal) {
     var comp = getCompFromTerminal(terminal)
@@ -153,7 +153,7 @@ function findSameTypeTerminal(terminal, type, loopedT) {
         // if connected terminal is not of same type,
         // do recursion
         else {
-            //console.log("findSameType b: " + findSameTypeTerminal(t, type, loopedT))
+            //console.log("findSameType b: " + findSameTypeTerminal(t, type, loopedT)) 
             result.push(findSameTypeTerminal(t, type, loopedT))
         }
     }
@@ -183,7 +183,7 @@ function removeRedundantCon(conDict) {
                 conDict[con].splice(ind, 1)
                 //console.log("splice: " + terminal)
 
-                // to prevent confusing the deleted connection
+                // to prevent confusing the deleted connection 
                 // with endpoints
                 if (conDict[con].length == 0) {
                     //console.log("removedCons added: " + con)
@@ -211,7 +211,7 @@ function getConnectionDict(type) {
                 connectionDict[key] = newDict[key]
                 //console.log("dict: " + key + ", val: " + newDict[key])
             }
-
+            
         }
     }
     // remove redundant connection
@@ -265,11 +265,11 @@ function checkInConDict(t, dict) {
             }
         }
     }
-    return false
-}
-
+    return false    
+}   
+    
 // convert connection dictionary to graph with edges and nodes
-export function convertToGraph(conDict, type) {
+function convertToGraph(conDict, type) {
     var graph = {};
     var nodeName = "N"
     if (type == "capacitor") {
@@ -288,14 +288,14 @@ export function convertToGraph(conDict, type) {
         let entryName = nodeName + "1"
         graph[nodeName + "0"] = {entryName : val}
     }
-
-    // if there are multiple components,
+    
+    // if there are multiple components, 
     // loop through connection dictionary
     for (const term in conDict) {
         var termNodeName = nodeName + nodeCount.toString()
         var valDict = {}
         if (conDict[term] != []) {
-
+        
             // get list of other terminals in same comp
             sameCompOtherT = getOtherTermSameComp(term);
             // find endpoint, add to node list
@@ -305,7 +305,7 @@ export function convertToGraph(conDict, type) {
                     valDict[otherNode] = getValFromTerminal(otherT)
                 }
             }
-
+            
             // loop through connected terminals to 'term'
             for (let i = 0; i < conDict[term].length; i++) {
                 var conT = conDict[term][i]
@@ -317,16 +317,16 @@ export function convertToGraph(conDict, type) {
                     // if that terminal is in conDict
                     // it is a node, so add that to dictionary
 
-                    //fix thisss
+                    //fix thisss 
                     if (checkInConDict(otherT, conDict)) {
                         //console.log("otherT in dict: " + otherT)
-                        otherNode = nodeName + getNodeInd(otherT, termNames).toString()
+                        otherNode = nodeName + getNodeInd(otherT, termNames).toString() 
 
                         // check if the connection is already in the graph (if cyclic)
                         if (otherNode in graph && termNodeName in graph[otherNode]) {
                            var nodeInd = getIndFromName(otherNode)
                            var cyclicT = termNames[nodeInd][0]
-                           // append to already existing node,
+                           // append to already existing node, 
                            // the connection to its other terminals in the same component
                            for (otherCT in getOtherTermSameComp(cyclicT)) {
                                var indC = getNodeInd(otherCT, termNames)
@@ -336,7 +336,7 @@ export function convertToGraph(conDict, type) {
                                     if (!(cyclicN in graph[otherNode])) {
                                         graph[otherNode][cyclicN] = cyclicV
                                     }
-                                    // edge case: where two compomenets are connected to
+                                    // edge case: where two compomenets are connected to 
                                     // only each other in cycle
                                     else {
                                         valDict[otherNode] = getValFromTerminal(cyclicT)
@@ -345,33 +345,33 @@ export function convertToGraph(conDict, type) {
                             }
 
 
-                        // if connection not in graph, add it
+                        // if connection not in graph, add it 
                         }
                         else {
                             valDict[otherNode] = getValFromTerminal(otherT)
                         }
                     }
-                    // more cases for cyclic circuit:
-                    else {
+                    // more cases for cyclic circuit: 
+                    else { 
                         throw (otherT + " not in conDict, sth's wrong")
                     }
                     //    for conConT in findSameTypeTerminal(otherT, type, []):
                     //        #console.log("conConT: " + conConT)
                     //        if (getCompFromTerminal(conConT) == getCompFromTerminal(term)):
-                    //            otherNode = nodeName + str(getNodeInd(otherT, termNames))
+                    //            otherNode = nodeName + str(getNodeInd(otherT, termNames))  
                     //            valDict[otherNode] = getValFromTerminal(otherT)
                 }
             }
         }
 
-
+        
         // if valDict not empty?
         if (Object.keys(valDict).length > 0) {
             graph[termNodeName] = valDict
         }
-        nodeCount += 1
-
-    }
+        nodeCount += 1   
+        
+    }        
     return graph
 }
 
@@ -391,9 +391,9 @@ function test() {
     // |-- C1 -- I1 -- C2 -- I2 -- C3 --|
     var C1 = new circComp("C1", "capacitor", ["C1_1", "C1_2"], "5F", {"C1_1": [], "C1_2": ["I1_1"]})
     var I1 = new circComp("I1", "inductor", ["I1_1", "I1_2"], "6H", {"I1_1": ["C1_2"], "I1_2": ["C2_1"]})
-    var C2 = new circComp("C2", "capacitor", ["C2_1", "C2_2"], "10F", {"C2_1": ["I1_2"], "C2_2": ["I2_1"]})
+    var C2 = new circComp("C2", "capacitor", ["C2_1", "C2_2"], "10F", {"C2_1": ["I1_2"], "C2_2": ["I2_1"]}) 
     var I2 = new circComp("I2", "inductor", ["I2_1", "I2_2"], "3H", {"I2_1": ["C2_1"], "I2_2": ["C3_1"]})
-    var C3 = new circComp("C3", "capacitor", ["C3_1", "C3_2"], "7F", {"C3_1": ["I2_1"], "C3_2": []})
+    var C3 = new circComp("C3", "capacitor", ["C3_1", "C3_2"], "7F", {"C3_1": ["I2_1"], "C3_2": []}) 
 
 
     // console.log(findSameTypeTerminal("C1_1", "capacitor"))
@@ -412,7 +412,7 @@ function test() {
     console.log(capConDict)
     // console.log(indConDict)
 
-
+    
     console.log(convertToGraph(capConDict, "capacitor"))
     //console.log(convertToGraph(indConDict, "inductor"))
 
@@ -425,7 +425,7 @@ function test() {
     // C1 -- I1 -- C2 -- I2 -- C1 (connected in cycle)
     var C1 = new circComp("C1", "capacitor", ["C1_1", "C1_2"], "5F", {"C1_1": ["I2_2"], "C1_2": ["I1_1"]})
     var I1 = new circComp("I1", "inductor", ["I1_1", "I1_2"], "6H", {"I1_1": ["C1_2"], "I1_2": ["C2_1"]})
-    var C2 = new circComp("C2", "capacitor", ["C2_1", "C2_2"], "10F", {"C2_1": ["I1_2"], "C2_2": ["I2_1"]})
+    var C2 = new circComp("C2", "capacitor", ["C2_1", "C2_2"], "10F", {"C2_1": ["I1_2"], "C2_2": ["I2_1"]}) 
     var I2 = new circComp("I2", "inductor", ["I2_1", "I2_2"], "3H", {"I2_1": ["C2_2"], "I2_2": ["C1_1"]})
 
     var capConDict = getConnectionDict("capacitor")
@@ -435,7 +435,7 @@ function test() {
     console.log(capConDict)
     // console.log(indConDict)
 
-
+    
     console.log(convertToGraph(capConDict, "capacitor"))
     //console.log(convertToGraph(indConDict, "inductor"))
 
@@ -447,9 +447,9 @@ function test() {
 
     // C1 -- C2 -- C3 -- C4 -- C1 (connected in cycle)
     var C1 = new circComp("C1", "capacitor", ["C1_1", "C1_2"], "5F", {"C1_1": ["C4_2"], "C1_2": ["C2_1"]})
-    var C2 = new circComp("C2", "capacitor", ["C2_1", "C2_2"], "7F", {"C2_1": ["C1_2"], "C2_2": ["C3_1"]})
-    var C3 = new circComp("C3", "capacitor", ["C3_1", "C3_2"], "9F", {"C3_1": ["C2_2"], "C3_2": ["C4_1"]})
-    var C4 = new circComp("C4", "capacitor", ["C4_1", "C4_2"], "11F", {"C4_1": ["C3_2"], "C4_2": ["C1_1"]})
+    var C2 = new circComp("C2", "capacitor", ["C2_1", "C2_2"], "7F", {"C2_1": ["C1_2"], "C2_2": ["C3_1"]}) 
+    var C3 = new circComp("C3", "capacitor", ["C3_1", "C3_2"], "9F", {"C3_1": ["C2_2"], "C3_2": ["C4_1"]}) 
+    var C4 = new circComp("C4", "capacitor", ["C4_1", "C4_2"], "11F", {"C4_1": ["C3_2"], "C4_2": ["C1_1"]}) 
 
     var capConDict = getConnectionDict("capacitor")
     // indConDict = getConnectionDict("inductor")
@@ -457,7 +457,7 @@ function test() {
     console.log("Test case 3:")
     console.log(capConDict)
     // console.log(indConDict)
-
+    
     console.log(convertToGraph(capConDict, "capacitor"))
     //console.log(convertToGraph(indConDict, "inductor"))
     clearCircCompList()
@@ -466,15 +466,15 @@ function test() {
     //#                Test Case 4                 ##
     //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-    // C1 -- I1 -- C2 -- I2 -- C3 -- I3 -- C1 (connected in cycle)
+    // C1 -- I1 -- C2 -- I2 -- C3 -- I3 -- C1 (connected in cycle) 
     var C1 = new circComp("C1", "capacitor", ["C1_1", "C1_2"], "5F", {"C1_1": ["I3_2"], "C1_2": ["I1_1"]})
-    var I1 = new circComp("I1", "inductor", ["I1_1", "I1_2"], "7H", {"I1_1": ["C1_2"], "I1_2": ["C2_1"]})
-    var C2 = new circComp("C2", "capacitor", ["C2_1", "C2_2"], "9F", {"C2_1": ["I1_2"], "C2_2": ["I2_1"]})
-    var I2 = new circComp("I2", "inductor", ["I2_1", "I2_2"], "11H", {"I2_1": ["C2_2"], "I2_2": ["C3_1"]})
+    var I1 = new circComp("I1", "inductor", ["I1_1", "I1_2"], "7H", {"I1_1": ["C1_2"], "I1_2": ["C2_1"]}) 
+    var C2 = new circComp("C2", "capacitor", ["C2_1", "C2_2"], "9F", {"C2_1": ["I1_2"], "C2_2": ["I2_1"]}) 
+    var I2 = new circComp("I2", "inductor", ["I2_1", "I2_2"], "11H", {"I2_1": ["C2_2"], "I2_2": ["C3_1"]}) 
     var C3 = new circComp("C3", "capacitor", ["C3_1", "C3_2"], "13F", {"C3_1": ["I2_2"], "C3_2": ["I3_1"]})
-    var I3 = new circComp("I3", "inductor", ["I3_1", "I3_2"], "15H", {"I3_1": ["C3_2"], "I3_2": ["C1_1"]})
+    var I3 = new circComp("I3", "inductor", ["I3_1", "I3_2"], "15H", {"I3_1": ["C3_2"], "I3_2": ["C1_1"]}) 
     // three capacitors and three inductors in cycle
-
+    
     var capConDict = getConnectionDict("capacitor")
     var indConDict = getConnectionDict("inductor")
 
@@ -482,7 +482,7 @@ function test() {
     console.log(capConDict)
     console.log(indConDict)
 
-
+    
     console.log(convertToGraph(capConDict, "capacitor"))
     console.log(convertToGraph(indConDict, "inductor"))
     clearCircCompList()
@@ -491,21 +491,21 @@ function test() {
     //#                Test Case 5                 ##
     //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-    //  --C1 --- C2 --   (connected in two cycle)
+    //  --C1 --- C2 --   (connected in two cycle) 
     // |      |      |
     // C6     C7     C3
     // |      |      |
     //  --C5-- --C4--
 
     var C1 = new circComp("C1", "capacitor", ["C1_1", "C1_2"], "5F", {"C1_1": ["C6_2"], "C1_2": ["C2_1", "C7_1"]})
-    var C2 = new circComp("C2", "capacitor", ["C2_1", "C2_2"], "7F", {"C2_1": ["C1_2", "C7_1"], "C2_2": ["C3_1"]})
-    var C3 = new circComp("C3", "capacitor", ["C3_1", "C3_2"], "9F", {"C3_1": ["C2_2"], "C3_2": ["C4_1"]})
-    var C4 = new circComp("C4", "capacitor", ["C4_1", "C4_2"], "11F", {"C4_1": ["C3_2"], "C4_2": ["C5_1", "C7_2"]})
-    var C5 = new circComp("C5", "capacitor", ["C5_1", "C5_2"], "13F", {"C5_1": ["C4_2", "C7_2"], "C5_2": ["C6_1"]})
-    var C6 = new circComp("C6", "capacitor", ["C6_1", "C6_2"], "15F", {"C6_1": ["C5_2"], "C6_2": ["C1_1"]})
-    var C7 = new circComp("C7", "capacitor", ["C7_1", "C7_2"], "17F", {"C7_1": ["C1_2", "C2_1"], "C7_2": ["C4_2", "C5_1"]})
+    var C2 = new circComp("C2", "capacitor", ["C2_1", "C2_2"], "7F", {"C2_1": ["C1_2", "C7_1"], "C2_2": ["C3_1"]}) 
+    var C3 = new circComp("C3", "capacitor", ["C3_1", "C3_2"], "9F", {"C3_1": ["C2_2"], "C3_2": ["C4_1"]}) 
+    var C4 = new circComp("C4", "capacitor", ["C4_1", "C4_2"], "11F", {"C4_1": ["C3_2"], "C4_2": ["C5_1", "C7_2"]}) 
+    var C5 = new circComp("C5", "capacitor", ["C5_1", "C5_2"], "13F", {"C5_1": ["C4_2", "C7_2"], "C5_2": ["C6_1"]}) 
+    var C6 = new circComp("C6", "capacitor", ["C6_1", "C6_2"], "15F", {"C6_1": ["C5_2"], "C6_2": ["C1_1"]}) 
+    var C7 = new circComp("C7", "capacitor", ["C7_1", "C7_2"], "17F", {"C7_1": ["C1_2", "C2_1"], "C7_2": ["C4_2", "C5_1"]}) 
 
-
+    
     var capConDict = getConnectionDict("capacitor")
     var indConDict = getConnectionDict("inductor")
 
@@ -518,8 +518,8 @@ function test() {
     clearCircCompList()
 }
 
-// function __main__() {
-//     test()
-// }
+function __main__() {
+    test()
+}
 
-// test();
+test();
