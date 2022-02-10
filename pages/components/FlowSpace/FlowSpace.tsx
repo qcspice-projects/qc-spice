@@ -73,13 +73,16 @@ export const FlowSpace = () => {
   const [reactFlowInstance, setReactFlowInstance] = useState<OnLoadParams>();
   const [elements, setElements] = useState<Elements>([]);
   const [activeElement, setActiveElement] = useState<any>({});
-  const [activeElementValue, setActiveElementValue] = useState<any>("");
+  const [activeElementValue, setActiveElementValue] = useState<number | string>(
+    ""
+  );
   const [valueChanged, setValueChanged] = useState<boolean>(false);
 
-  // Context origin
+  // Data representation of elements for sending to Metal
   const [components, setComponents] = useState({});
 
-  // UseEffects keep ReactFlow state in sync with data state (?)
+  // useEffect
+  // reference: https://codesandbox.io/s/rqf2q?file=/src/Flow.js
   useEffect(() => {
     console.log(activeElementValue);
     console.log(activeElement);
@@ -107,6 +110,7 @@ export const FlowSpace = () => {
         return el;
       });
       setElements(updatedElement);
+      updateQComponent(activeElement.id, newValue);
       setValueChanged(false);
     }
   }, [valueChanged, activeElementValue, setElements]);
@@ -129,7 +133,8 @@ export const FlowSpace = () => {
       value: nodeInfo.data.value,
       connections: {},
     };
-    setComponents((components) => ({ ...components, [nodeInfo.id]: newNode }));
+    // setComponents((components) => ({ ...components, [nodeInfo.id]: newNode }));
+    createQComponent(nodeInfo.id, newNode);
   };
 
   const onElementClick = (event: MouseEvent, element: FlowElement) => {
@@ -145,12 +150,21 @@ export const FlowSpace = () => {
     }
   };
 
-  // reference: https://codesandbox.io/s/rqf2q?file=/src/Flow.js
   const onInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     console.log(e.target.id);
     console.log(activeElementValue);
     setActiveElementValue(e.target.value);
     setValueChanged(true);
+  };
+
+  const createQComponent = (nodeId, newNode) => {
+    setComponents((components) => ({ ...components, [nodeId]: newNode }));
+  };
+
+  const updateQComponent = (qId, newValue) => {
+    const updatedQComp = { ...components[qId], value: newValue };
+    const newQComps = { ...components, [qId]: updatedQComp };
+    setComponents(newQComps);
   };
 
   /**
