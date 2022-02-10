@@ -24,13 +24,8 @@ export const GroundNode = ({ data }) => {
 };
 
 export const InductorNode = ({ data }) => {
-  const iconRef = forwardRef((_props, _ref) => (
-    <Image
-      src="/inductor.svg"
-      alt="Inductor"
-      height="50px"
-      width="100px"
-    />
+  const iconRef = forwardRef(() => (
+    <Image src="/inductor.svg" alt="Inductor" height="50px" width="100px" />
   ));
   iconRef.displayName = "iconRef";
   return (
@@ -57,16 +52,27 @@ export const InductorNode = ({ data }) => {
 };
 
 export const CapacitorNode = ({ data }) => {
+  const iconRef = forwardRef(() => (
+    <Image src="/capacitor.svg" alt="Capacitor" height="50px" width="100px" />
+  ));
+  iconRef.displayName = "iconRef";
   return (
     <>
       <div className={styles.qubitDraggable}>
         <Handle type="source" position={Position.Left} />
-        <Image
-          src="/capacitor.svg"
-          alt="Capacitor"
-          height="50px"
-          width="100px"
-        />
+        <Tooltip
+          showIcon={true}
+          direction="right"
+          focusTrap={true}
+          renderIcon={iconRef}
+        >
+          <TextInput
+            id="capacitance"
+            labelText="Capacitance"
+            onChange={data.onChange}
+            value={data.value.capacitance}
+          />
+        </Tooltip>
         <Handle type="target" position={Position.Right} />
       </div>
     </>

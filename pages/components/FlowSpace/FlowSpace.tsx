@@ -1,4 +1,11 @@
-import { useState, DragEvent, MouseEvent, KeyboardEvent, ChangeEvent, useEffect } from "react";
+import {
+  useState,
+  DragEvent,
+  MouseEvent,
+  KeyboardEvent,
+  ChangeEvent,
+  useEffect,
+} from "react";
 import ReactFlow, {
   ReactFlowProvider,
   addEdge,
@@ -65,8 +72,9 @@ const customNodeTypes = {
 export const FlowSpace = () => {
   const [reactFlowInstance, setReactFlowInstance] = useState<OnLoadParams>();
   const [elements, setElements] = useState<Elements>([]);
-  const [activeElement, setActiveElement] = useState<any>();
-  const [activeElementValue, setActiveElementValue] = useState<ComponentValue>();
+  const [activeElement, setActiveElement] = useState<any>({});
+  const [activeElementValue, setActiveElementValue] = useState<any>("");
+  const [valueChanged, setValueChanged] = useState<boolean>(false);
 
   // Context origin
   const [components, setComponents] = useState({});
@@ -74,8 +82,34 @@ export const FlowSpace = () => {
   // UseEffects keep ReactFlow state in sync with data state (?)
   useEffect(() => {
     console.log(activeElementValue);
-
-  }, [activeElementValue, setElements])
+    console.log(activeElement);
+    if (valueChanged) {
+      let newValue: any = {};
+      if (activeElement.type === "inductor")
+        newValue = {
+          capacitance: activeElement.data?.value.capacitance,
+          inductance: activeElementValue,
+        };
+      if (activeElement.type === "capacitor")
+        newValue = {
+          capacitance: activeElementValue,
+          inductance: activeElement.data?.value.inductance,
+        };
+      setActiveElement({
+        ...activeElement,
+        data: { ...activeElement.data, value: newValue },
+      });
+      console.log(activeElement);
+      const updatedElement = elements.map((el) => {
+        if (el.id === activeElement.id) {
+          return { ...el, data: { ...el.data, value: newValue } };
+        }
+        return el;
+      });
+      setElements(updatedElement);
+      setValueChanged(false);
+    }
+  }, [valueChanged, activeElementValue, setElements]);
 
   /**
    * Internal func:
@@ -103,29 +137,21 @@ export const FlowSpace = () => {
     console.log(element);
     if (element.type !== "step") {
       setActiveElement(element);
-      setActiveElementValue(element.data.value);
+      setValueChanged(false);
+      if (element.type === "inductor")
+        setActiveElementValue(element.data.value.inductance);
+      if (element.type === "capacitor")
+        setActiveElementValue(element.data.value.capacitance);
     }
-  }
+  };
 
   // reference: https://codesandbox.io/s/rqf2q?file=/src/Flow.js
   const onInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     console.log(e.target.id);
     console.log(activeElementValue);
-    if (e.target.id === "inductance") setActiveElementValue({...activeElementValue, inductance: e.target.value});
-    if (e.target.id === "capacitance") setActiveElementValue({...activeElementValue, capacitance: e.target.value});
-    // console.log(activeElement);
-    // console.log(e);
-    // setActiveElement((prevActiveEl) => ({...prevActiveEl, data: {...prevActiveEl.data, value: e.target.value}}));
-    // console.log(activeElement);
-    // const updatedElement = elements.map((el) => {
-    //   if (el.id === activeElement.id) {
-    //     return {...el, data: {...el.data, value: e.target.value}};
-    //   }
-    //   return el;
-    // });
-
-    // setElements(updatedElement);
-  }
+    setActiveElementValue(e.target.value);
+    setValueChanged(true);
+  };
 
   /**
    * Internal func:
@@ -150,7 +176,7 @@ export const FlowSpace = () => {
   // };
 
   const onConnect = (params: Connection | Edge) =>
-    setElements((els) => addEdge({...params, type: "step"}, els));
+    setElements((els) => addEdge({ ...params, type: "step" }, els));
   const onElementsRemove = (elementsToRemove: Elements) =>
     setElements((els) => removeElements(elementsToRemove, els));
 
@@ -202,10 +228,10 @@ export const FlowSpace = () => {
    * connections
    */
 
-  /**
-   * Translate state structure to graph for Metal
-   */
-  const formatGraph = () => {};
+  const onPaneClick = () => {
+    setActiveElement({});
+    setActiveElementValue("");
+  };
 
   return (
     <>
@@ -236,18 +262,23 @@ export const FlowSpace = () => {
           <div className={styles.qubitFlow}>
             <QubitSidebar />
             <div className={styles.qubitReactFlowWrapper}>
-              {/* <FormatGraph /> */}
               <ReactFlow
                 elements={elements}
                 onConnect={onConnect}
                 onElementsRemove={onElementsRemove}
                 onElementClick={onElementClick}
+                onPaneClick={onPaneClick}
                 onLoad={onLoad}
                 onDragOver={onDragOver}
                 onDrop={onDrop}
                 nodeTypes={customNodeTypes}
               >
-                <Background variant={BackgroundVariant.Dots} gap={20} size={1} color="#aaa" />
+                <Background
+                  variant={BackgroundVariant.Dots}
+                  gap={20}
+                  size={1}
+                  color="#aaa"
+                />
               </ReactFlow>
             </div>
           </div>
