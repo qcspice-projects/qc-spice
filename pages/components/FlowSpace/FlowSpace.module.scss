@@ -1,5 +1,4 @@
 .qubitFlow {
-  flex-direction: column;
   display: flex;
   height: 100%;
   /* TODO: there's gotta be a better way to make room for the header */
@@ -9,6 +8,7 @@
 .qubitFlow aside {
   border-right: 1px solid;
   padding: 15px 10px;
+  width: 15%;
 }
 
 .qubitFlow aside > * {

@@ -1,5 +1,8 @@
-import { DragEvent, MouseEvent, useState } from "react";
+import { DragEvent, forwardRef, memo, MouseEvent, useState } from "react";
+import Image from "next/image";
+import { Handle, Position } from "react-flow-renderer";
 import styles from "./QubitDraggable.module.scss";
+import { TextInput, Tooltip } from "carbon-components-react";
 
 interface QubitProps {
   compType: string;
@@ -8,28 +11,87 @@ interface QubitProps {
   dragStart: (event: DragEvent, nodeType: string) => void;
 }
 
-// TODO: needs to be a CustomNode type for ReactFlow
-export const QubitComponent = (props: QubitProps) => {
-  // if (!props.isSubsystem)
-  // const [valueFieldVisible, setValueFieldVisible] = useState(false);
+// Custom node def
+export const GroundNode = ({ data }) => {
+  return (
+    <>
+      <div className={styles.qubitDraggable}>
+        <Handle type="source" position={Position.Top} id={`${data.nodeId}_gnd`} />
+        <Image src="/ground.svg" alt="Ground" height="100px" width="50px" />
+      </div>
+    </>
+  );
+};
 
-  // TODO: would single click or double click be better for this?
-  // const onDblClick = (event: MouseEvent) => setValueFieldVisible(true);
+export const InductorNode = ({ data }) => {
+  const iconRef = forwardRef(() => (
+    <Image src="/inductor.svg" alt="Inductor" height="50px" width="100px" />
+  ));
+  iconRef.displayName = "iconRef";
+  return (
+    <>
+      <div className={styles.qubitDraggable}>
+        <Handle type="source" position={Position.Left} id={`${data.nodeId}_1`} />
+        <Tooltip
+          showIcon={true}
+          direction="right"
+          focusTrap={true}
+          renderIcon={iconRef}
+        >
+          <TextInput
+            id="inductance"
+            labelText="Inductance"
+            onChange={data.onChange}
+            value={data.value.inductance}
+          />
+        </Tooltip>
+        <Handle type="target" position={Position.Right} id={`${data.nodeId}_2`} />
+      </div>
+    </>
+  );
+};
+
+export const CapacitorNode = ({ data }) => {
+  const iconRef = forwardRef(() => (
+    <Image src="/capacitor.svg" alt="Capacitor" height="50px" width="100px" />
+  ));
+  iconRef.displayName = "iconRef";
+  return (
+    <>
+      <div className={styles.qubitDraggable}>
+        <Handle type="source" position={Position.Left} id={`${data.nodeId}_1`} />
+        <Tooltip
+          showIcon={true}
+          direction="right"
+          focusTrap={true}
+          renderIcon={iconRef}
+        >
+          <TextInput
+            id="capacitance"
+            labelText="Capacitance"
+            onChange={data.onChange}
+            value={data.value.capacitance}
+          />
+        </Tooltip>
+        <Handle type="target" position={Position.Right} id={`${data.nodeId}_2`} />
+      </div>
+    </>
+  );
+};
+
+// TODO: use images
+export const QubitComponentDrag = (props: QubitProps) => {
   return (
     <>
       <div
         className={"dndnode " + styles.qubitComponent}
         draggable
         onDragStart={(event: DragEvent) => {
-          console.log("drag start");
           props.dragStart(event, props.compType);
         }}
-        // onDoubleClick={(event: MouseEvent) => onDblClick(event)}
       >
         {props.compName}
       </div>
     </>
   );
-
-  // return <></>;
 };

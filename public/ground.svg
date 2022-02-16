@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="46px" height="39px" viewBox="0 0 46 39" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>g1187</title>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd" stroke-linecap="round">
+        <g id="Electrical_symbols_library" transform="translate(-187.000000, -972.583310)" stroke="#000000" stroke-width="3.5">
+            <g id="g1187" transform="translate(189.000000, 974.583310)">
+                <line x1="21" y1="14" x2="21" y2="0" id="path1181" stroke-linejoin="round"></line>
+                <polygon id="path1183" stroke-linejoin="bevel" points="0 14 42 14 21 35"></polygon>
+            </g>
+        </g>
+    </g>
+</svg>

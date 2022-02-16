@@ -1,5 +1,5 @@
 import { DragEvent } from "react";
-import { QubitComponent } from "../QubitDraggable/QubitDraggable";
+import { QubitComponentDrag } from "../QubitDraggable/QubitDraggable";
 
 const onDragStart = (event: DragEvent, nodeType: string) => {
   console.log(event);
@@ -11,27 +11,24 @@ const onDragStart = (event: DragEvent, nodeType: string) => {
 export const QubitSidebar = () => {
   return (
     <aside>
-      <QubitComponent
+      <QubitComponentDrag
         compType="capacitor"
         compName="Capacitor"
         isSubsystem={false}
         dragStart={onDragStart}
       />
-      <QubitComponent
+      <QubitComponentDrag
         compType="inductor"
         compName="Inductor"
         isSubsystem={false}
         dragStart={onDragStart}
       />
-      <QubitComponent
-        compType="gnd"
+      <QubitComponentDrag
+        compType="ground"
         compName="Ground"
         isSubsystem={false}
         dragStart={onDragStart}
       />
-      {/* <div className="dndnode" onDragStart={(event: DragEvent) => onDragStart(event, 'capacitor')}>Capacitor</div>
-      <div className="dndnode" onDragStart={(event: DragEvent) => onDragStart(event, 'inductor')}>Inductor</div>
-      <div className="dndnode output" onDragStart={(event: DragEvent) => onDragStart(event, 'ground')}>Ground</div> */}
     </aside>
   );
 };
