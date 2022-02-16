@@ -16,11 +16,10 @@ import ReactFlow, {
   OnLoadParams,
   Node,
   ElementId,
-  useStoreState,
-  ReactFlowState,
   Background,
   BackgroundVariant,
   FlowElement,
+  ConnectionLineType,
 } from "react-flow-renderer";
 import {
   Header,
@@ -38,10 +37,18 @@ import {
 import { QubitContext } from "../../context/qubitContext";
 import styles from "./FlowSpace.module.scss";
 
-// Type
+// Types
 interface ComponentValue {
-  capacitance: number | string;
-  inductance: number | string;
+  capacitance?: number | string | undefined;
+  inductance?: number | string | undefined;
+}
+
+interface QComponent {
+  label: string;
+  type: string | undefined;
+  terminals: Array<string>;
+  value: ComponentValue;
+  connections: Record<string, Array<string>>;
 }
 
 // TODO IMPORTANT: this file is so big...needs to be split
@@ -72,22 +79,22 @@ const customNodeTypes = {
 export const FlowSpace = () => {
   const [reactFlowInstance, setReactFlowInstance] = useState<OnLoadParams>();
   const [elements, setElements] = useState<Elements>([]);
-  const [activeElement, setActiveElement] = useState<any>({});
+  const [activeElement, setActiveElement] = useState<FlowElement>(
+    {} as FlowElement
+  );
   const [activeElementValue, setActiveElementValue] = useState<number | string>(
     ""
   );
   const [valueChanged, setValueChanged] = useState<boolean>(false);
 
   // Data representation of elements for sending to Metal
-  const [components, setComponents] = useState({});
+  const [components, setComponents] = useState<Record<string, QComponent>>({});
 
   // useEffect
   // reference: https://codesandbox.io/s/rqf2q?file=/src/Flow.js
   useEffect(() => {
-    console.log(activeElementValue);
-    console.log(activeElement);
     if (valueChanged) {
-      let newValue: any = {};
+      let newValue: ComponentValue = {};
       if (activeElement.type === "inductor")
         newValue = {
           capacitance: activeElement.data?.value.capacitance,
@@ -121,26 +128,25 @@ export const FlowSpace = () => {
    * -pass it the "createValue" function
    * -add node to QubitContext
    */
-  const createNode = (nodeInfo) => {
+  const createNode = (nodeInfo: Node) => {
     const nodeTerminals =
       nodeInfo.type === "ground"
-        ? ["gnd"]
+        ? [`${nodeInfo.id}_gnd`]
         : [`${nodeInfo.id}_1`, `${nodeInfo.id}_2`];
-    const newNode = {
+    const nodeConnections = nodeTerminals.reduce((prev, curr) => ({ ...prev, [curr]: []}), {});
+    const newNode: QComponent = {
       label: nodeInfo.data.label,
       type: nodeInfo.type,
       terminals: nodeTerminals,
       value: nodeInfo.data.value,
-      connections: {},
+      connections: nodeConnections,
     };
     // setComponents((components) => ({ ...components, [nodeInfo.id]: newNode }));
     createQComponent(nodeInfo.id, newNode);
   };
 
   const onElementClick = (event: MouseEvent, element: FlowElement) => {
-    console.log(event);
-    console.log(element);
-    if (element.type !== "step") {
+    if (element.type !== ConnectionLineType.Straight) {
       setActiveElement(element);
       setValueChanged(false);
       if (element.type === "inductor")
@@ -151,46 +157,64 @@ export const FlowSpace = () => {
   };
 
   const onInputChange = (e: ChangeEvent<HTMLInputElement>) => {
-    console.log(e.target.id);
-    console.log(activeElementValue);
     setActiveElementValue(e.target.value);
     setValueChanged(true);
   };
 
-  const createQComponent = (nodeId, newNode) => {
+  const createQComponent = (nodeId: string, newNode: QComponent) => {
     setComponents((components) => ({ ...components, [nodeId]: newNode }));
   };
 
-  const updateQComponent = (qId, newValue) => {
+  const updateQComponent = (qId: string, newValue: ComponentValue) => {
     const updatedQComp = { ...components[qId], value: newValue };
     const newQComps = { ...components, [qId]: updatedQComp };
     setComponents(newQComps);
   };
 
-  /**
-   * Internal func:
-   * -when connecting nodes, look up id (is there a better way?)
-   * -add connections to id's connections obj
-   */
-  const connectNode = (sourceNode, targetNode) => {};
-
-  /**
-   *
-   *
-  // //  */
-  // const updateValue = (nodeId, newValue) => {
-  //   // TODO: components is being saved as "at time" object
-  //   // this should be a callback ?
-  //   console.log(nodeId);
-  //   console.log(components);
-  //   const targetNode = components.nodeId;
-  //   console.log(targetNode);
-  //   const updatedNode = { ...targetNode, value: newValue };
-  //   setComponents((components) => ({ ...components, [nodeId]: updatedNode }));
-  // };
+  const connectQComponent = (params: Connection | Edge) => {
+    // override types -- we won't be accepting null (null shouldn't appear from ReactFlow)
+    const { source, sourceHandle, target, targetHandle } = params as {
+      source: string;
+      sourceHandle: string;
+      target: string;
+      targetHandle: string;
+    };
+    const sourceComp = components[source];
+    const sourceConnections = sourceComp.connections;
+    const targetComp = components[target];
+    const targetConnections = targetComp.connections;
+    // Add handle to connections
+    // Convert connections to Set to remove duplicates
+    // then convert Set back to Array
+    // ...might consider just using a Set ?
+    const newSConnections = Array.from(
+      new Set([...sourceConnections[sourceHandle], targetHandle])
+    );
+    const newTConnections = Array.from(
+      new Set([...targetConnections[targetHandle], sourceHandle])
+    );
+    const newSourceComp = {
+      ...sourceComp,
+      connections: {
+        ...sourceConnections,
+        [sourceHandle]: newSConnections,
+      },
+    };
+    const newTargetComp = {
+      ...targetComp,
+      connections: {
+        ...targetConnections,
+        [targetHandle]: newTConnections,
+      },
+    };
+    setComponents({ ...components, [source]: newSourceComp, [target]: newTargetComp});
+  };
 
   const onConnect = (params: Connection | Edge) =>
-    setElements((els) => addEdge({ ...params, type: "step" }, els));
+    setElements((els) => {
+      connectQComponent(params);
+      return addEdge({ ...params, type: ConnectionLineType.Straight }, els);
+    });
   const onElementsRemove = (elementsToRemove: Elements) =>
     setElements((els) => removeElements(elementsToRemove, els));
 
@@ -232,18 +256,9 @@ export const FlowSpace = () => {
     }
   };
 
-  // TODO: qubit data state needs to be managed separately from reactflow
-  /**
-   * format expected by function: object containing:
-   * label
-   * type
-   * terminals
-   * value
-   * connections
-   */
-
+  // Resets selected element when clicking on empty space.
   const onPaneClick = () => {
-    setActiveElement({});
+    setActiveElement({} as FlowElement);
     setActiveElementValue("");
   };
 
@@ -253,8 +268,8 @@ export const FlowSpace = () => {
         <QubitContext.Provider
           value={{
             components,
-            addComponent: createNode,
-            updateComponent: connectNode,
+            // addComponent: createNode,
+            // updateComponent: connectNode,
           }}
         >
           <Header aria-label="Quantum Spice">

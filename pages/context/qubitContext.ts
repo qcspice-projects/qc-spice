@@ -4,6 +4,6 @@ export const QubitContext = createContext({
   components: {},
   // TODO: may be unnecessary ?
   // connections: {},
-  addComponent: () => {},
-  updateComponent: () => {}
+  // addComponent: () => {},
+  // updateComponent: () => {}
 });
