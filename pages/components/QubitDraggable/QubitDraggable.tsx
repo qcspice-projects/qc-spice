@@ -16,7 +16,12 @@ export const GroundNode = ({ data }) => {
   return (
     <>
       <div className={styles.qubitDraggable}>
-        <Handle type="source" position={Position.Top} id={`${data.nodeId}_gnd`} />
+        <Handle
+          type="source"
+          position={Position.Top}
+          id={`${data.nodeId}_gnd`}
+          style={{ height: "10px", width: "10px" }}
+        />
         <Image src="/ground.svg" alt="Ground" height="100px" width="50px" />
       </div>
     </>
@@ -31,7 +36,12 @@ export const InductorNode = ({ data }) => {
   return (
     <>
       <div className={styles.qubitDraggable}>
-        <Handle type="source" position={Position.Left} id={`${data.nodeId}_1`} />
+        <Handle
+          type="source"
+          position={Position.Left}
+          id={`${data.nodeId}_1`}
+          style={{ height: "10px", width: "10px" }}
+        />
         <Tooltip
           showIcon={true}
           direction="right"
@@ -45,7 +55,12 @@ export const InductorNode = ({ data }) => {
             value={data.value.inductance}
           />
         </Tooltip>
-        <Handle type="target" position={Position.Right} id={`${data.nodeId}_2`} />
+        <Handle
+          type="target"
+          position={Position.Right}
+          id={`${data.nodeId}_2`}
+          style={{ height: "10px", width: "10px" }}
+        />
       </div>
     </>
   );
@@ -59,7 +74,12 @@ export const CapacitorNode = ({ data }) => {
   return (
     <>
       <div className={styles.qubitDraggable}>
-        <Handle type="source" position={Position.Left} id={`${data.nodeId}_1`} />
+        <Handle
+          type="source"
+          position={Position.Left}
+          id={`${data.nodeId}_1`}
+          style={{ height: "10px", width: "10px" }}
+        />
         <Tooltip
           showIcon={true}
           direction="right"
@@ -73,7 +93,12 @@ export const CapacitorNode = ({ data }) => {
             value={data.value.capacitance}
           />
         </Tooltip>
-        <Handle type="target" position={Position.Right} id={`${data.nodeId}_2`} />
+        <Handle
+          type="target"
+          position={Position.Right}
+          id={`${data.nodeId}_2`}
+          style={{ height: "10px", width: "10px" }}
+        />
       </div>
     </>
   );
