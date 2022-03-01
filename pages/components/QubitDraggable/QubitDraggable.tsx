@@ -2,7 +2,7 @@ import { DragEvent, forwardRef, memo, MouseEvent, useState } from "react";
 import Image from "next/image";
 import { Handle, Position } from "react-flow-renderer";
 import styles from "./QubitDraggable.module.scss";
-import { TextInput, Tooltip } from "carbon-components-react";
+import { Dropdown, TextInput, Tooltip } from "carbon-components-react";
 
 interface QubitProps {
   compType: string;
@@ -54,6 +54,14 @@ export const InductorNode = ({ data }) => {
             onChange={data.onChange}
             value={data.value.inductance}
           />
+          <Dropdown
+            id="inductance_subsys"
+            titleText="Subsystem"
+            label="Subsystem options"
+            items={["Subsystem1", "Subsystem2", "Subsystem3"]}
+            selectedItem={data.subsystem}
+            onChange={data.onDropdownChange}
+          />
         </Tooltip>
         <Handle
           type="target"
@@ -91,6 +99,14 @@ export const CapacitorNode = ({ data }) => {
             labelText="Capacitance"
             onChange={data.onChange}
             value={data.value.capacitance}
+          />
+          <Dropdown
+            id="capitance_subsys"
+            titleText="Subsystem"
+            label="Subsystem options"
+            items={["Subsystem1", "Subsystem2", "Subsystem3"]}
+            selectedItem={data.subsystem}
+            onChange={data.onDropdownChange}
           />
         </Tooltip>
         <Handle

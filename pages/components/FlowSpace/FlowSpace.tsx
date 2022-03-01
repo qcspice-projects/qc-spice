@@ -49,6 +49,7 @@ interface QComponent {
   terminals: Array<string>;
   value: ComponentValue;
   connections: Record<string, Array<string>>;
+  subsystem?: string;
 }
 
 // TODO IMPORTANT: this file is so big...needs to be split
@@ -86,9 +87,34 @@ export const FlowSpace = () => {
     ""
   );
   const [valueChanged, setValueChanged] = useState<boolean>(false);
+  const [activeElementSubsys, setActiveElementSubsys] = useState<string>("");
+  const [subsysChanged, setSubsysChanged] = useState<boolean>(false);
 
   // Data representation of elements for sending to Metal
   const [components, setComponents] = useState<Record<string, QComponent>>({});
+
+  useEffect(() => {
+    if (subsysChanged) {
+      const updatedElement = elements.map((el) => {
+        if (el.id === activeElement.id) {
+          return {
+            ...el,
+            data: { ...el.data, subsystem: activeElementSubsys },
+          };
+        }
+        return el;
+      });
+
+      const updatedQComp = {
+        ...components[activeElement.id],
+        subsystem: activeElementSubsys,
+      };
+      const newQComps = { ...components, [activeElement.id]: updatedQComp };
+      setElements(updatedElement);
+      setComponents(newQComps);
+      setSubsysChanged(false);
+    }
+  }, [subsysChanged, activeElementSubsys, setElements]);
 
   // useEffect
   // reference: https://codesandbox.io/s/rqf2q?file=/src/Flow.js
@@ -133,13 +159,17 @@ export const FlowSpace = () => {
       nodeInfo.type === "ground"
         ? [`${nodeInfo.id}_gnd`]
         : [`${nodeInfo.id}_1`, `${nodeInfo.id}_2`];
-    const nodeConnections = nodeTerminals.reduce((prev, curr) => ({ ...prev, [curr]: []}), {});
+    const nodeConnections = nodeTerminals.reduce(
+      (prev, curr) => ({ ...prev, [curr]: [] }),
+      {}
+    );
     const newNode: QComponent = {
       label: nodeInfo.data.label,
       type: nodeInfo.type,
       terminals: nodeTerminals,
       value: nodeInfo.data.value,
       connections: nodeConnections,
+      subsystem: "Subsystem 1",
     };
     // setComponents((components) => ({ ...components, [nodeInfo.id]: newNode }));
     createQComponent(nodeInfo.id, newNode);
@@ -159,6 +189,12 @@ export const FlowSpace = () => {
   const onInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     setActiveElementValue(e.target.value);
     setValueChanged(true);
+  };
+
+  const onDropdownChange = (e) => {
+    // console.log(e);
+    setActiveElementSubsys(e.selectedItem);
+    setSubsysChanged(true);
   };
 
   const createQComponent = (nodeId: string, newNode: QComponent) => {
@@ -207,7 +243,11 @@ export const FlowSpace = () => {
         [targetHandle]: newTConnections,
       },
     };
-    setComponents({ ...components, [source]: newSourceComp, [target]: newTargetComp});
+    setComponents({
+      ...components,
+      [source]: newSourceComp,
+      [target]: newTargetComp,
+    });
   };
 
   const onConnect = (params: Connection | Edge) =>
@@ -237,8 +277,8 @@ export const FlowSpace = () => {
         y: event.clientY - 40,
       });
 
-      console.log(event.dataTransfer.dropEffect);
-      console.log(event.dataTransfer.effectAllowed);
+      // console.log(event.dataTransfer.dropEffect);
+      // console.log(event.dataTransfer.effectAllowed);
       const newNodeId = getId(type);
       const newNode: Node = {
         id: newNodeId,
@@ -248,7 +288,9 @@ export const FlowSpace = () => {
           nodeId: newNodeId,
           label: `${type}`,
           value: { capacitance: 0, inductance: 0 },
+          subsystem: "Subsystem 1",
           onChange: onInputChange,
+          onDropdownChange: onDropdownChange,
         },
       };
       setElements((es) => es.concat(newNode));
